@@ -60,11 +60,14 @@ match=zeros(10,length(tMRN.MRN));
 mrns=str2num(cell2mat(mghPatients.mrn));
 mghPatients.mrn = mrns;
 for i = 1:length(tMRN.MRN)
-    if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall), 1))==0
-        idxall = find(abs(days(datetime(dtt(i,:))-datetime(dtm(:,:))))<3);
-        
-        match(1:length(find(tMRN.MRN(i)==mghPatients.mrn(idxall))),i) = idxall(tMRN.MRN(i)==mghPatients.mrn(idxall));
-    else
+
+    if isempty(find(tMRN.MRN(i)==mghPatients.mrn, 1))==0
+        idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
+                    match(1:length(find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2)),i) = idxmrn(1)-1+find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2);
+% if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall), 1))==0
+%         match(1:length(find(tMRN.MRN(i)==mghPatients.mrn(idxall))),i) = idxall(tMRN.MRN(i)==mghPatients.mrn(idxall));
+
+else
         match(1,i)=0;
     end
 end

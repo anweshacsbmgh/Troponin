@@ -38,10 +38,10 @@ end
 %     i
 %     if tMRN.MRN(i) == uniqueMRN(flagid) && sum(str2num(cell2mat(mghPatients.mrn))==uniqueMRN(flagid))>0
 %                     count = find(str2num(cell2mat(mghPatients.mrn))==uniqueMRN(flagid),1);
-% 
+%
 %         for j=1:sum(str2num(cell2mat(mghPatients.mrn))==uniqueMRN(flagid))
 %         diffdate(j) = days(datetime(dtt(i,:))-datetime(dtm(count+j-1,:)));
-%         
+%
 %         end
 %         if abs(min(diffdate)) < 3
 %         match(i) = count-1+find(diffdate==min(diffdate));
@@ -51,19 +51,24 @@ end
 %         end
 %     else
 %         flagid = flagid+1;
-%         
+%
 %     end
 %             clear diffdate
-% 
+%
 % end
-match=zeros(
+match=zeros(10,length(tMRN.MRN));
 mrns=str2num(cell2mat(mghPatients.mrn));
 mghPatients.mrn = mrns;
 for i = 1:length(tMRN.MRN)
-    idxall = find(abs(days(datetime(dtt(i,:))-datetime(dtm)))<3);
-    if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall)))==0
-    match(i,:) = find(tMRN.MRN(i)==mghPatients.mrn(idxall));
-    else
-        match(i,:)=0;
+
+    if isempty(find(tMRN.MRN(i)==mghPatients.mrn, 1))==0
+        idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
+                    match(1:length(find((days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2)),i) = idxmrn(1)-1+find((days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2 | ...
+                        (days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))>-1);
+% if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall), 1))==0
+%         match(1:length(find(tMRN.MRN(i)==mghPatients.mrn(idxall))),i) = idxall(tMRN.MRN(i)==mghPatients.mrn(idxall));
+
+else
+        match(1,i)=0;
     end
 end
