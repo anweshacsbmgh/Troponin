@@ -71,3 +71,24 @@ else
         match(1,i)=0;
     end
 end
+%% matching accession number
+ clear tMRN
+load '/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/tMRN_Accession.mat'
+matchid = find(match(1,:));
+match(match==0)=1;
+accession = tMRN.sAccession;
+mghaccession = char(mghPatients.accession);
+mghaccession(:,1:4) =[];
+for i = 1:length(tMRN.sAccession)
+    if isempty(accession{i})==0
+    idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
+    if ismember(accession{i},cellstr(mghaccession(idxmrn,:)))==1
+        idx(i)=find(strcmp(accession{i},cellstr(mghaccession(idxmrn,:))));
+    else
+        idx(i)=0;
+    end
+    else
+                idx(i)=0;
+
+    end
+end
