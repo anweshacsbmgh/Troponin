@@ -60,19 +60,19 @@ match=zeros(10,length(tMRN.MRN));
 mrns=str2num(cell2mat(mghPatients.mrn));
 mghPatients.mrn = mrns;
 for i = 1:length(tMRN.MRN)
-
+    
     if isempty(find(tMRN.MRN(i)==mghPatients.mrn, 1))==0
         idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
-                    match(1:length(find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2)),i) = idxmrn(1)-1+find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2);
-% if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall), 1))==0
-%         match(1:length(find(tMRN.MRN(i)==mghPatients.mrn(idxall))),i) = idxall(tMRN.MRN(i)==mghPatients.mrn(idxall));
-
-else
+        match(1:length(find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2)),i) = idxmrn(1)-1+find(abs(days(datetime(dtt(i,:))-datetime(dtm(idxmrn,:))))<2);
+        % if isempty(find(tMRN.MRN(i)==mghPatients.mrn(idxall), 1))==0
+        %         match(1:length(find(tMRN.MRN(i)==mghPatients.mrn(idxall))),i) = idxall(tMRN.MRN(i)==mghPatients.mrn(idxall));
+        
+    else
         match(1,i)=0;
     end
 end
 %% matching accession number
- clear tMRN
+clear tMRN
 load '/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/tMRN_Accession.mat'
 matchid = find(match(1,:));
 match(match==0)=1;
@@ -81,14 +81,161 @@ mghaccession = char(mghPatients.accession);
 mghaccession(:,1:4) =[];
 for i = 1:length(tMRN.sAccession)
     if isempty(accession{i})==0
-    idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
-    if ismember(accession{i},cellstr(mghaccession(idxmrn,:)))==1
-        idx(i)=find(strcmp(accession{i},cellstr(mghaccession(idxmrn,:))));
+        idxmrn = find(tMRN.MRN(i)==mghPatients.mrn);
+        if ismember(accession{i},cellstr(mghaccession(idxmrn,:)))==1
+            idx(i)=idxmrn(1)-1+find(strcmp(accession{i},cellstr(mghaccession(idxmrn,:))));
+        else
+            idx(i)=0;
+        end
     else
         idx(i)=0;
-    end
-    else
-                idx(i)=0;
-
+        
     end
 end
+
+%% putting together the list
+list(2,:)=[mghPatients(idx(2),:),tMRN(2,:)];
+
+for i = 3:length(idx)
+    if idx(i)>0
+        list(end+1,:) = [mghPatients(idx(i),:),tMRN(i,:)];
+    end
+end
+list(1,:)=[];
+save('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/list.mat','list')
+%% Reading from the Datalog extracts
+clear
+load ('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/list.mat','list')
+fnames = dir('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96');
+fnames(1:2,:)=[];
+string = repmat('%s ', 1, 263);
+for i=1:length(fnames)
+    filename = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',fnames(i).name);
+    fid = fopen(filename);
+    excel = textscan(fid,string,2,'delimiter',',');
+    exceldate(i,:) = excel{1,2}(2);
+    fclose(fid);
+    %     clear excel
+end
+allFiles=struct2table(fnames);
+allFiles.date = datestr(exceldate);
+allFiles.year = allFiles.date(:,8:11);
+% allFile.ddDatnum = datenum(allFiles.date);
+allFiles = sortrows(allFiles,{'year','datenum'});
+importantColumns = [1,2,8,22,100,101,103,102,106,107,108,109];
+
+for i = 1:height(list)
+    k =find(datetime(cell2mat(list.lab_date(i,:)))<=datetime(allFiles.date(:,:)),1)-1;
+    if k==0
+        k=1;
+    end
+    
+    filename = cell2mat(strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',allFiles.name(k)));
+    [status, result] = system( ['wc -l ', filename] );
+    numlines = str2num(result(1,1:9));
+    fid = fopen(filename);
+    excel = textscan(fid,string,numlines,'delimiter',',');
+    fclose(fid);
+    dummy = excel{1,8};
+    lineNum = find(strcmp(list.sContainerID(i),dummy),1);
+    if isempty(lineNum)==1 
+        k1=k+1;
+        filename = cell2mat(strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',allFiles.name(k1)));
+        
+        [status, result] = system( ['wc -l ', filename] );
+        numlines = str2num(result(1,1:9));
+        fid = fopen(filename);
+        excel = textscan(fid,string,numlines,'delimiter',',');
+        fclose(fid);
+        dummy = excel{1,8};
+        lineNum = find(strcmp(list.sContainerID(i),dummy),1);
+    end
+    
+    if isempty(lineNum)==1 && k>1
+        k1=k-1;
+        filename = cell2mat(strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',allFiles.name(k1)));
+        
+        [status, result] = system( ['wc -l ', filename] );
+        numlines = str2num(result(1,1:9));
+        fid = fopen(filename);
+        excel = textscan(fid,string,numlines,'delimiter',',');
+        fclose(fid);
+        dummy = excel{1,8};
+        lineNum = find(strcmp(list.sContainerID(i),dummy),1);
+    end
+    if isempty(lineNum)==1
+            dummy1 = zeros(1,length(importantColumns));
+            allReducedLogs (i,j) = mat2cell(dummy1,1);
+    else
+        
+        for j=1:length(importantColumns)
+            allReducedLogs (i,j) =  excel{1,importantColumns(j)}(lineNum);
+        end
+    end
+    clear excel
+    clear numlines
+    clear lineNum
+end
+
+delIND = find(any(cellfun(@isempty,allReducedLogs(:,1)),2));
+allReducedLogs(delIND,:)=[];
+list(delIND,:) = [];
+CompList = [list,cell2table(allReducedLogs)];
+
+CompList.Properties.VariableNames{17}='ContainerID';
+CompList.Properties.VariableNames{18}='WBC';
+CompList.Properties.VariableNames{19}='RBC';
+CompList.Properties.VariableNames{20}='HGB';
+CompList.Properties.VariableNames{21}='RDW';
+CompList.Properties.VariableNames{22}='MCV';
+CompList.Properties.VariableNames{23}='MCH';
+CompList.Properties.VariableNames{24}='MCHC';
+CompList.Properties.VariableNames{25}='HCT';
+CompList.Properties.VariableNames{26}='PLT';
+findindi = find(strcmp(CompList.results,'<0.01')); %finding rows where result reads "<0.01"
+CompList.results(findindi) = cellstr('0.005');
+
+AllResults  = [CompList(:,18:26), CompList(:,5)];
+
+ResultArray = table2array(AllResults);
+ResultArray(strcmp(ResultArray(:,end),'Credit'),:)=[];
+delIND1= find(any(cellfun(@isempty,ResultArray(:,end)),2));
+ResultArray(delIND1,:)=[];
+ResultArray(strcmp(ResultArray(:,end),'Refused'),:)=[];
+ResultArray(strcmp(ResultArray(:,end),'Cancelled'),:)=[];
+
+data = cellfun(@str2num,ResultArray);
+save('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat');
+% % string = ['%d ', '%D ', '%s ', '%s ', '%d ', '%d ', '%d ', '%s ',repmat('%d ', 1, 255)];
+% string = repmat('%s ', 1, 263);
+% % for i = 1:254
+% %     string = strcat(string, '%d ');
+% % end
+% fnames(1:2,:) =[];
+%
+% for i=1:length(fnames)
+%     file = fnames(i).name;
+%     filename = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',file);
+%     [status, result] = system( ['wc -l ', filename] );
+%     numlines = str2num(result(1,1:9));
+%     fid = fopen(filename,'r');
+% %     fnamesSub = dir('/Volumes/MGH-CSB/higgins/data/sapphire/file');
+%     excel = textscan(fid,string,numlines,'delimiter',',');
+%     allDatalogs(i,1:263) = excel;
+%     clear excel
+%     clear numlines
+%     fclose(fid);
+% end
+% allReducedLogs = cell(1,length(importantColumns));
+% importantColumns = [1,2,8,22,100,101,103,102,106,107,108,109];
+% for i = 1:length(fnames)
+%     for j=1:length(importantColumns)
+%     allReducedLogs (end+1:end+numel(allDatalogs{i,1}),j) =  allDatalogs{i,importantColumns(j)};
+%     end
+% end
+%
+
+%% Searching for the corresponding filepath and the name of the FCS files
+namesf =  dir('/Volumes/MGH-CSB/higgins/data/sapphire');
+namesf = struct2table(namesf);
+namesf = sortrows(namesf,'datenum','ascend');
