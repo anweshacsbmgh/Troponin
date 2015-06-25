@@ -237,5 +237,33 @@ save('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat');
 
 %% Searching for the corresponding filepath and the name of the FCS files
 namesf =  dir('/Volumes/MGH-CSB/higgins/data/sapphire');
+namesf([1:3,237:244],:)=[];
 namesf = struct2table(namesf);
 namesf = sortrows(namesf,'datenum','ascend');
+
+fileDate = datestr(namesf.date(:));
+for i = 1:length(ResultArray)
+    i
+indic(i) = find(datetime(cell2mat(CompList.allReducedLogs2(i,:)))<=datetime(cell2mat(namesf.date(:,:))),1);
+comp = datestr(namesf.date(indic(i)));
+allindic = find(strcmp(cellstr(comp(1:11)),cellstr(fileDate(:,1:11))));
+for j = 1:length(allindic)
+    nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(allindic(j)));
+    allsubF = struct2table(dir(cell2mat(nameSubF)));
+names = char(allsubF.name);
+dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+datevec = [str2num(names(dummyid,11:14)),str2num(names(dummyid,15:16)),str2num(names(dummyid,17:18)),...
+    str2num(names(dummyid,20:21)),str2num(names(dummyid,22:23)),str2num(names(dummyid,24:25))];
+ rundate = datestr(datevec);   
+ findFile = find(strcmp(cell2mat(CompList.allReducedLogs1(i)),cellstr(num2str(str2num(names(dummyid,27:30)))))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) & 
+ if isempty(findFile)==0
+     assignFile(i,:) = names(findFile,:);
+     pathFile(1,i) = nameSubF;
+     clear findFile
+%      keyboard
+     break
+ end
+ 
+end
+   
+end
