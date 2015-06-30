@@ -124,7 +124,7 @@ allFiles.year = allFiles.date(:,8:11);
 allFiles = sortrows(allFiles,{'year','datenum'});
 importantColumns = [1,2,8,22,100,101,103,102,106,107,108,109];
 
-for i = 1:height(list)
+for i = 693:height(list)
     k =find(datetime(cell2mat(list.lab_date(i,:)))<=datetime(allFiles.date(:,:)),1)-1;
     if k==0
         k=1;
@@ -236,13 +236,15 @@ save('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat');
 %
 
 %% Searching for the corresponding filepath and the name of the FCS files
+load('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat')
 namesf =  dir('/Volumes/MGH-CSB/higgins/data/sapphire');
 namesf([1:3,237:244],:)=[];
 namesf = struct2table(namesf);
 namesf = sortrows(namesf,'datenum','ascend');
 
 fileDate = datestr(namesf.date(:));
-for i = 1:length(ResultArray)
+for i = 3087:height(CompList)
+    i
 indic(i) = find(datetime(cell2mat(CompList.allReducedLogs2(i,:)))<=datetime(cell2mat(namesf.date(:,:))),1);
 comp = datestr(namesf.date(indic(i)));
 allindic = find(strcmp(cellstr(comp(1:11)),cellstr(fileDate(:,1:11))));
@@ -254,11 +256,93 @@ dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
 datevec = [str2num(names(dummyid,11:14)),str2num(names(dummyid,15:16)),str2num(names(dummyid,17:18)),...
     str2num(names(dummyid,20:21)),str2num(names(dummyid,22:23)),str2num(names(dummyid,24:25))];
  rundate = datestr(datevec);   
- findFile = find(strcmp(cellstr(rundate(:,1:11)),comp(1:11)) & strcmp(cell2mat(CompList.allReducedLogs1(i)),names(dummyid,27:30)));
- if isempty(findFile)==0
-     assignFile(i) = names(findFile,:);
-     break
+ if length(cell2mat(CompList.allReducedLogs1(i)))<4
+     namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+ else
+     namefid = cell2mat(CompList.allReducedLogs1(i));
  end
+ findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) & 
+ if isempty(findFile)==0
+     assignFile(i,:) = names(findFile,:);
+     pathFile(1,i) = nameSubF;
+%      clear findFile
+%      keyboard
+     break
+ else
+         assignFile(i,:) = num2str(zeros(1,11));
+ 
+ end
+ 
+end
+  clear names
+end
+
+
+emptyCells = find(cellfun('isempty', pathFile)); %finding indices for which search didn't work
+
+namesf = sortrows(namesf,'name');
+
+for k=1:length(emptyCells)
+    i = emptyCells(k);
+    dateOfTest = cell2mat(CompList.allReducedLogs2(i,:));
+    if dateOfTest<'2012-06-14 00:00:00'
+        namefil = ['FCS Backup','FCS-42318az96'];
+        if length(cell2mat(CompList.allReducedLogs1(i)))<4
+     namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+ else
+     namefid = cell2mat(CompList.allReducedLogs1(i));
+ end
+ 
+        for p=1:2
+      nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namefil(p));  
+      dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+
+ findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30))));
+ if isempty(findFile)==0
+     assignFile(i,:) = names(findFile,:);
+     pathFile(1,i) = nameSubF;
+%      clear findFile
+%      keyboard
+     break
+ else
+         assignFile(i,:) = num2str(zeros(1,11));
+ end
+ 
+        end 
+    end
+    dummyStr = [dateOfTest(6:7),dateOfTest(9:10)];
+charnames = char(namesf.name); 
+if strcmp(dateOfTest(1:4),'2012')==1 & dateOfTest>'2012-06-14 00:00:00'
+   indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+  
+   for j = 1:4
+    nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+    allsubF = struct2table(dir(cell2mat(nameSubF)));
+names = char(allsubF.name);
+ if length(cell2mat(CompList.allReducedLogs1(i)))<4
+     namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+ else
+     namefid = cell2mat(CompList.allReducedLogs1(i));
+ end
+ dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+
+ findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) & 
+ if isempty(findFile)==0
+     assignFile(i,:) = names(findFile,:);
+     pathFile(1,i) = nameSubF;
+%      clear findFile
+%      keyboard
+     break
+ else
+         assignFile(i,:) = num2str(zeros(1,11));
+ indic(i) = indic(i)+1;
+
+ end
+ 
+   end
 end
    
+if 
+
+ clear names
 end

@@ -1,5 +1,5 @@
 clear
-close all
+% close all
 load('/Users/anweshachaudhury/Desktop/Anwesha research/Data files/Troponindata/tropdata.mat');
 Troponinexcel(679:682,:)=[];
 Troponinexcel(663:666,:)=[];

@@ -31,8 +31,19 @@ end
 for i=1:numel(data(1,:))-1
     [xx,ind] = sort(x);
     subplot(3,3,i)
+    plot(xx(:,i),y(ind),'w.',xx(:,i),smoothY(i,ind(:,i)),'r-',xx(:,i),smoothY1(i,ind(:,i)),'g-')
+    ylim([0 1])
+    xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
+    title(Label(i))
+end
+figure
+for i=1:numel(data(1,:))-1
+    [xx,ind] = sort(x);
+    subplot(3,3,i)
     plot(xx(:,i),y(ind),'b.',xx(:,i),smoothY(i,ind(:,i)),'r-',xx(:,i),smoothY1(i,ind(:,i)),'g-')
     ylim([0 1])
     xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
     title(Label(i))
 end
+figure
+boxplot(data)

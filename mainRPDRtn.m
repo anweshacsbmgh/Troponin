@@ -138,7 +138,7 @@ for i = 1:height(list)
     fclose(fid);
     dummy = excel{1,8};
     lineNum = find(strcmp(list.sContainerID(i),dummy),1);
-    if isempty(lineNum)==1 
+    if isempty(lineNum)==1
         k1=k+1;
         filename = cell2mat(strcat('/Volumes/MGH-CSB/higgins/data/sapphire/DataLogExtracts-42318az96/',allFiles.name(k1)));
         
@@ -164,8 +164,8 @@ for i = 1:height(list)
         lineNum = find(strcmp(list.sContainerID(i),dummy),1);
     end
     if isempty(lineNum)==1
-            dummy1 = zeros(1,length(importantColumns));
-            allReducedLogs (i,j) = mat2cell(dummy1,1);
+        dummy1 = zeros(1,length(importantColumns));
+        allReducedLogs (i,j) = mat2cell(dummy1,1);
     else
         
         for j=1:length(importantColumns)
@@ -236,34 +236,330 @@ save('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat');
 %
 
 %% Searching for the corresponding filepath and the name of the FCS files
+load('/Users/anweshachaudhury/Desktop/mghTN/mghTNpatients/mghPatData.mat')
 namesf =  dir('/Volumes/MGH-CSB/higgins/data/sapphire');
 namesf([1:3,237:244],:)=[];
 namesf = struct2table(namesf);
 namesf = sortrows(namesf,'datenum','ascend');
 
 fileDate = datestr(namesf.date(:));
-for i = 1:length(ResultArray)
+for i = 1:height(CompList)
     i
-indic(i) = find(datetime(cell2mat(CompList.allReducedLogs2(i,:)))<=datetime(cell2mat(namesf.date(:,:))),1);
-comp = datestr(namesf.date(indic(i)));
-allindic = find(strcmp(cellstr(comp(1:11)),cellstr(fileDate(:,1:11))));
-for j = 1:length(allindic)
-    nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(allindic(j)));
-    allsubF = struct2table(dir(cell2mat(nameSubF)));
-names = char(allsubF.name);
-dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
-datevec = [str2num(names(dummyid,11:14)),str2num(names(dummyid,15:16)),str2num(names(dummyid,17:18)),...
-    str2num(names(dummyid,20:21)),str2num(names(dummyid,22:23)),str2num(names(dummyid,24:25))];
- rundate = datestr(datevec);   
- findFile = find(strcmp(cell2mat(CompList.allReducedLogs1(i)),cellstr(num2str(str2num(names(dummyid,27:30)))))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) & 
- if isempty(findFile)==0
-     assignFile(i,:) = names(findFile,:);
-     pathFile(1,i) = nameSubF;
-     clear findFile
-%      keyboard
-     break
- end
- 
+    indic(i) = find(datetime(cell2mat(CompList.allReducedLogs2(i,:)))<=datetime(cell2mat(namesf.date(:,:))),1);
+    comp = datestr(namesf.date(indic(i)));
+    allindic = find(strcmp(cellstr(comp(1:11)),cellstr(fileDate(:,1:11))));
+    for j = 1:length(allindic)
+        nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(allindic(j)));
+        allsubF = struct2table(dir(cell2mat(nameSubF)));
+        names = char(allsubF.name);
+        dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+        datevec = [str2num(names(dummyid,11:14)),str2num(names(dummyid,15:16)),str2num(names(dummyid,17:18)),...
+            str2num(names(dummyid,20:21)),str2num(names(dummyid,22:23)),str2num(names(dummyid,24:25))];
+        rundate = datestr(datevec);
+        if length(cell2mat(CompList.allReducedLogs1(i)))<4
+            namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+        else
+            namefid = cell2mat(CompList.allReducedLogs1(i));
+        end
+        findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+        if isempty(findFile)==0
+            assignFile(i,:) = names(findFile,:);
+            pathFile(1,i) = nameSubF;
+            
+            break
+        else
+            assignFile(i,:) = num2str(zeros(1,11));
+            
+        end
+        
+    end
+    clear names
 end
-   
+
+%% Further searching-semi manually
+emptyCells = find(cellfun('isempty', pathFile)); %finding indices for which search didn't work
+
+namesf = sortrows(namesf,'name');
+
+for k=1:length(emptyCells)
+    i = emptyCells(k);
+    dateOfTest = cell2mat(CompList.allReducedLogs2(i,:));
+    
+    if datenum(dateOfTest)<datenum('2012-06-14 00:00:00')
+        namefil = ['FCS Backup','FCS-42318az96','miss1025'];
+        if length(cell2mat(CompList.allReducedLogs1(i)))==3
+            namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+        else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                    namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                else
+                    namefid = cell2mat(CompList.allReducedLogs1(i));
+                end
+            end
+        end
+        
+        for p=1:3
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namefil(p));
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30))));
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+            end
+            
+        end
+        if isempty(findFile)==0
+            continue
+        end
+    end
+    
+    charnames = char(namesf.name);
+    
+    if strcmp(dateOfTest(1:4),'2012')==1 & datenum(dateOfTest)>datenum('2012-06-14 00:00:00')
+        dummyStr = [dateOfTest(6:7),dateOfTest(9:10)];
+        
+        indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+        
+        for j = 1:4
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+            allsubF = struct2table(dir(cell2mat(nameSubF)));
+            names = char(allsubF.name);
+            if length(cell2mat(CompList.allReducedLogs1(i)))==3
+                namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                    namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+                else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                        namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                    else
+                        namefid = cell2mat(CompList.allReducedLogs1(i));
+                    end
+                end
+            end
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+                indic(i) = indic(i)+1;
+                
+            end
+            
+        end
+        if isempty(findFile)==0
+            continue
+        end
+    end
+    
+    if datenum(dateOfTest)>=datenum('2012-12-27 00:00:00') & datenum(dateOfTest)<datenum('2013-01-29 00:00:00')
+        namefil = ['0102','0103','0104','0118','0121','0125','0128','0130'];
+        if length(cell2mat(CompList.allReducedLogs1(i)))==3
+            namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+        else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                    namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                else
+                    namefid = cell2mat(CompList.allReducedLogs1(i));
+                end
+            end
+        end
+        
+        for p=1:8
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namefil(p));
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30))));
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+            end
+            
+        end
+        if isempty(findFile)==0
+            continue
+        end
+    end
+    
+    charnames = char(namesf.name);
+    
+    if strcmp(dateOfTest(1:4),'2012')==1 & datenum(dateOfTest)>datenum('2012-06-14 00:00:00')
+        dummyStr = [dateOfTest(6:7),dateOfTest(9:10)];
+        
+        indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+        
+        for j = 1:4
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+            allsubF = struct2table(dir(cell2mat(nameSubF)));
+            names = char(allsubF.name);
+            if length(cell2mat(CompList.allReducedLogs1(i)))==3
+                namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                    namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+                else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                        namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                    else
+                        namefid = cell2mat(CompList.allReducedLogs1(i));
+                    end
+                end
+            end
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+                indic(i) = indic(i)+1;
+                
+            end
+            
+        end
+        if isempty(findFile)==0
+            continue
+        end
+    end
+    
+    if strcmp(dateOfTest(1:4),'2013')==1 & datenum(dateOfTest)>datenum('2013-01-29 00:00:00')
+        dummyStr = [dateOfTest(1:4),dateOfTest(6:7),dateOfTest(9:10)];
+        indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+        for j = 1:4
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+            allsubF = struct2table(dir(cell2mat(nameSubF)));
+            names = char(allsubF.name);
+            if length(cell2mat(CompList.allReducedLogs1(i)))==3
+                namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                    namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+                else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                        namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                    else
+                        namefid = cell2mat(CompList.allReducedLogs1(i));
+                    end
+                end
+            end
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+                indic(i) = indic(i)+1;
+                
+            end
+        end
+    end
+    
+    if strcmp(dateOfTest(1:4),'2014')==1
+        dummyStr = [dateOfTest(1:4),dateOfTest(6:7),dateOfTest(9:10)];
+        indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+        for j = 1:4
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+            allsubF = struct2table(dir(cell2mat(nameSubF)));
+            names = char(allsubF.name);
+            if length(cell2mat(CompList.allReducedLogs1(i)))==3
+                namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                    namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+                else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                        namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                    else
+                        namefid = cell2mat(CompList.allReducedLogs1(i));
+                    end
+                end
+            end
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+                indic(i) = indic(i)+1;
+                
+            end
+        end
+    end
+    
+    if strcmp(dateOfTest(1:4),'2015')==1
+        dummyStr = [dateOfTest(1:4),dateOfTest(6:7),dateOfTest(9:10)];
+        indic(i) = find(str2num(dummyStr)<=str2num(charnames),1);
+        for j = 1:4
+            nameSubF = strcat('/Volumes/MGH-CSB/higgins/data/sapphire/',namesf.name(indic(i)));
+            allsubF = struct2table(dir(cell2mat(nameSubF)));
+            names = char(allsubF.name);
+            if length(cell2mat(CompList.allReducedLogs1(i)))==3
+                namefid = ['0',cell2mat(CompList.allReducedLogs1(i))];
+            else if length(cell2mat(CompList.allReducedLogs1(i)))==2
+                    namefid = ['00',cell2mat(CompList.allReducedLogs1(i))];
+                else if length(cell2mat(CompList.allReducedLogs1(i)))==1
+                        namefid = ['000',cell2mat(CompList.allReducedLogs1(i))];
+                    else
+                        namefid = cell2mat(CompList.allReducedLogs1(i));
+                    end
+                end
+            end
+            dummyid = find(~ismember(cellstr(names(1:length(names),end-2:end)),'typ'));
+            
+            findFile = find(strcmp(cellstr(namefid),cellstr(names(dummyid,27:30)))); %strcmp(cellstr(rundate(:,1:11)),comp(1:11)) &
+            if isempty(findFile)==0
+                assignFile(i,:) = names(findFile,1:31);
+                pathFile(1,i) = nameSubF;
+                %      clear findFile
+                %      keyboard
+                break
+            else
+                assignFile(i,:) = num2str(zeros(1,11));
+                indic(i) = indic(i)+1;
+                
+            end
+        end
+    end
+    
+    % if isempty(names)==0
+    % %     clear names
+    % end
 end
+pathFile(cellfun('isempty',pathFile))=cellstr('0');
+
+ResultArray = table2array(AllResults);
+delIND11 = find(strcmp(ResultArray(:,end),'Credit'));
+delIND12 = find(any(cellfun(@isempty,ResultArray(:,end)),2));
+delIND13 = find(strcmp(ResultArray(:,end),'Refused'));
+delIND14 = find(strcmp(ResultArray(:,end),'Cancelled'));
+assignFile([delIND11;delIND12;delIND13;delIND14],:)=[];
+pathFile([delIND11;delIND12;delIND13;delIND14])=[];
+
+idxZeros = find(cellfun(@(c)(strcmp(c,'0')), pathFile));
+pathFile(idxZeros,:)=[];
+assignFile(idxZeros,:)=[];
