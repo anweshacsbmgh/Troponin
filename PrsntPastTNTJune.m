@@ -115,7 +115,7 @@ Index = 0;
 patref1= 0;
 for i=1:length(a)-1
     CBC(end+1:end+length(a(i)+3:a(i+1)+1),:)=table2array(Troponinexcel(a(i)+3:a(i+1)+1,colsInpredictor));
-    hsTNT(end+1:end+length(a(i)+3:a(i+1)+1))=Troponinexcel.VarName11(a(i)+3:a(i+1)+1); %predictors are CBCs at max(HsTNT)
+    hsTNT(end+1:end+length(a(i)+3:a(i+1)+1))=Troponinexcel.VarName10(a(i)+3:a(i+1)+1); %predictors are CBCs at max(HsTNT)
     TNT(end+1:end+length(a(i)+3:a(i+1)+1))=Troponinexcel.VarName10(a(i)+3:a(i+1)+1);
     rtcidx(end+1:end+length(a(i)+3:a(i+1)+1))=Troponinexcel.rtcTest(a(i)+3:a(i+1)+1);
     Index(end+1:end+length(a(i)+3:a(i+1)+1))=Troponinexcel.VarName14(a(i)+3:a(i+1)+1);
@@ -149,6 +149,8 @@ patref = patref(find(rtcidx));
 idd = find(hsTNT(find(rtcidx))>50000);
 data(idd,:)=[];
 patref(idd)=[];
+data(isnan(data(1,:)),:)=[];
+
 dataCBC = zeros(1,numel(data(1,:)));
 %identifying the first and following instances for each patient
 %CBCs are future-current, TNT is current
@@ -161,7 +163,9 @@ for i = 1:length(uniquePat)
   end
 end
 dataCBC(1,:)=[];
-
+for i = 1:numel(dataCBC(1,:))-1
+dataCBC(:,i) = (dataCBC(:,i) - mean(dataCBC(:,i)))./std(dataCBC(:,i));
+end
 for i = 1:numel(dataCBC(1,:))-2
     yy2 = smooth(dataCBC(:,i),dataCBC(:,end),0.1,'rlowess');
     yy21 = smooth(dataCBC(:,i),dataCBC(:,end),0.3,'rlowess');
@@ -179,13 +183,13 @@ p(i) = stats(3);
 end
 x=dataCBC(:,1:numel(dataCBC(1,:))-2);
 y=dataCBC(:,end);
-Label = [cellstr('hsTNI vs WBC'), cellstr('hsTNI vs RBC_i'),cellstr('hsTNI vs HGB'),cellstr('hsTNI vs MCV'),cellstr('hsTNI vs RDW'),...
-    cellstr('hsTNI vs MCH'),cellstr('hsTNI vs MCHC'),cellstr('hsTNI vs HCT'),cellstr('hsTNI vs PLT')];
+Label = [cellstr('TNT vs WBC'), cellstr('TNT vs RBC_i'),cellstr('TNT vs HGB'),cellstr('TNT vs MCV'),cellstr('TNT vs RDW'),...
+    cellstr('TNT vs MCH'),cellstr('TNT vs MCHC'),cellstr('TNT vs HCT'),cellstr('TNT vs PLT')];
 for i=1:numel(dataCBC(1,:))-2
     [xx,ind] = sort(x);
     subplot(3,3,i)
-    plot(xx(:,i),y(ind),'w.',xx(:,i),smoothY(i,ind(:,i)),'r-',xx(:,i),smoothY1(i,ind(:,i)),'g-')
-    ylim([0 20])
+    plot(xx(:,i),y(ind),'b.',xx(:,i),smoothY(i,ind(:,i)),'r-',xx(:,i),smoothY1(i,ind(:,i)),'g-')
+    ylim([0 30])
     xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
     title(Label(i))
 end
@@ -231,7 +235,9 @@ for i = 1:length(uniquePatRBC)
     end
 end
 dataRBC_(1,:)=[];
-
+for i = 1:numel(dataRBC_(1,:))-1
+dataRBC_(:,i) = (dataRBC_(:,i) - mean(dataRBC_(:,i)))./std(dataRBC_(:,i));
+end
 for i = 1:numel(dataRBC_(1,:))-1
     yy2 = smooth(dataRBC_(:,i),dataRBC_(:,end),0.1,'rlowess');
     yy21 = smooth(dataRBC_(:,i),dataRBC_(:,end),0.3,'rlowess');
@@ -251,8 +257,8 @@ pRBC(i) = stats(3);
 end
 % figure
 % plot(dataRBC(:,end-1),RDW,'.')
-Label = [cellstr('hsTNI vs \alpha'), cellstr('hsTNI vs \beta_v'),cellstr('hsTNI vs \beta_h'),cellstr('hsTNI vs D_v'),cellstr('hsTNI vs D_h'),...
-    cellstr('hsTNI vs v_c')];
+Label = [cellstr('TNT vs \alpha'), cellstr('TNT vs \beta_v'),cellstr('TNT vs \beta_h'),cellstr('TNT vs D_v'),cellstr('TNT vs D_h'),...
+    cellstr('TNT vs v_c')];
 
 x=dataRBC_(:,1:numel(dataRBC_(1,:))-1);
 y=dataRBC_(:,end);
@@ -260,8 +266,8 @@ figure
 for i=1:numel(dataRBC_(1,:))-1
     [xx,ind] = sort(x);
     subplot((numel(dataRBC_(1,:))-1)/2,2,i)
-    plot(xx(:,i),y(ind),'w.',xx(:,i),smoothYRBC(i,ind(:,i)),'r-',xx(:,i),smoothYRBC1(i,ind(:,i)),'g-')
-    ylim([0 30])
+    plot(xx(:,i),y(ind),'b.',xx(:,i),smoothYRBC(i,ind(:,i)),'r-',xx(:,i),smoothYRBC1(i,ind(:,i)),'g-')
+    ylim([0 100])
     xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
     title(Label(i))
 end
@@ -305,7 +311,9 @@ for i = 1:length(uniquePatplt)
     end
 end
 dataplt_(1,:)=[];
-
+for i = 1:numel(dataplt_(1,:))-1
+dataplt_(:,i) = (dataplt_(:,i) - mean(dataplt_(:,i)))./std(dataplt_(:,i));
+end
 
 for i = 1:numel(dataplt_(1,:))-1
     yy2 = smooth(dataplt_(:,i),dataplt_(:,end),0.1,'rlowess');
@@ -325,17 +333,17 @@ pPLT(i) = stats(3);
     corrpPLT(:,:,i)=cp;
     corrPLT(:,:,i) = rPLT;
 end
-Label = [cellstr('hsTNI vs MPV'), cellstr('hsTNI vs \mu_1'),cellstr('hsTNI vs \mu_2'),cellstr('hsTNI vs \sigma_1'),cellstr('hsTNI vs \sigma_2'),cellstr('hsTNI vs Kurtosis_1'),...
-    cellstr('hsTNI vs Kurtosis_2'),cellstr('hsTNI vs Skewness_1'),cellstr('hsTNI vs Skewness_2'),cellstr('hsTNI vs Mode_1'),cellstr('hsTNI vs Mode_2'),...
-    cellstr('hsTNI vs Median_1'),cellstr('hsTNI vs Median_2'),cellstr('hsTNI vs Interquart_1'),cellstr('hsTNI vs Interquart_2'),cellstr('hsTNI vs corr_{12}')];
+Label = [cellstr('TNT vs MPV'), cellstr('TNT vs \mu_1'),cellstr('TNT vs \mu_2'),cellstr('TNT vs \sigma_1'),cellstr('TNT vs \sigma_2'),cellstr('TNT vs Kurtosis_1'),...
+    cellstr('TNT vs Kurtosis_2'),cellstr('TNT vs Skewness_1'),cellstr('TNT vs Skewness_2'),cellstr('TNT vs Mode_1'),cellstr('TNT vs Mode_2'),...
+    cellstr('TNT vs Median_1'),cellstr('TNT vs Median_2'),cellstr('TNT vs Interquart_1'),cellstr('TNT vs Interquart_2'),cellstr('TNT vs corr_{12}')];
 x=dataplt_(:,1:numel(dataplt_(1,:))-1);
 y=dataplt_(:,end);
 figure
 for i=1:numel(dataplt_(1,:))-1
     [xx,ind] = sort(x);
     subplot((numel(dataplt_(1,:))-1)/4,4,i)
-    plot(xx(:,i),y(ind),'w.',xx(:,i),smoothYplt(i,ind(:,i)),'r-',xx(:,i),smoothYplt1(i,ind(:,i)),'g-')
-    ylim([0 30])
+    plot(xx(:,i),y(ind),'b.',xx(:,i),smoothYplt(i,ind(:,i)),'r-',xx(:,i),smoothYplt1(i,ind(:,i)),'g-')
+    ylim([0 5])
     xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
     title(Label(i))
 end

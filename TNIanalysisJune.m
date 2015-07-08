@@ -143,6 +143,10 @@ data(isnan(data(:,1)),:)=[];
 for i = 1:numel(data(1,:))-1
 data(:,i) = (data(:,i) - mean(data(:,i)))./std(data(:,i));
 end
+interestingWBC = data(data(:,1)>=1,:);
+restWBC = data(data(:,1)<1,:);
+interestingPLT = data(data(:,end-2)<=-1,:);
+restPLT = data(data(:,end-2)>-1,:);
 for i = 1:numel(data(1,:))-2
     yy2 = smooth(data(:,i),data(:,end),0.05,'rlowess');
     yy21 = smooth(data(:,i),data(:,end),0.3,'rlowess');
@@ -167,7 +171,7 @@ for i=1:numel(data(1,:))-2
     
    h =  subplot(3,3,i);
     plot(xx(:,i),y(ind),'b.',xx(:,i),smoothY(i,ind(:,i)),'r-',xx(:,i),smoothY1(i,ind(:,i)),'g-')
-    lsline(h)
+%     lsline(h)
     ylim([0 200])
     xlim([quantile(xx(:,i),0.05) quantile(xx(:,i),0.95)])
 % xlim([-2 2])
@@ -208,7 +212,7 @@ for i = 1:numel(dataRBC(1,:))-1
     ynorm = (yy2-min(yy2))./(max(yy2)-min(yy2));
     xnorm = (dataRBC(:,i)-min(dataRBC(:,i)))./(max(dataRBC(:,i))-min(dataRBC(:,i)));
  
-    [rRBC,cp] = corrcoef(xnorm,ynorm);
+    [rRBC,cp] = corrcoef(dataRBC(:,i),yy2);
     corrpRBC(:,:,i)=cp;
     corrRBC(:,:,i) = rCBC;
 end
@@ -216,7 +220,9 @@ end
 % plot(dataRBC(:,end-1),RDW,'.')
 Label = [cellstr('hsTNI vs \alpha'), cellstr('hsTNI vs \beta_v'),cellstr('hsTNI vs \beta_h'),cellstr('hsTNI vs D_v'),cellstr('hsTNI vs D_h'),...
     cellstr('hsTNI vs v_c')];
-
+for i = 1:numel(dataRBC(1,:))-1
+dataRBC(:,i) = (dataRBC(:,i) - mean(dataRBC(:,i)))./std(dataRBC(:,i));
+end
 x=dataRBC(:,1:numel(dataRBC(1,:))-1);
 y=dataRBC(:,end);
 figure
@@ -260,13 +266,16 @@ for i = 1:numel(dataplt(1,:))-1
      ynorm = (yy2-min(yy2))./(max(yy2)-min(yy2));
     xnorm = (dataplt(:,i)-min(dataplt(:,i)))./(max(dataplt(:,i))-min(dataplt(:,i)));
 
-        [rPLT,cp] = corrcoef(xnorm,ynorm);
+        [rPLT,cp] = corrcoef(dataplt(:,i),yy2);
     corrpPLT(:,:,i)=cp;
     corrPLT(:,:,i) = rPLT;
 end
 Label = [cellstr('hsTNI vs MPV'), cellstr('hsTNI vs \mu_1'),cellstr('hsTNI vs \mu_2'),cellstr('hsTNI vs \sigma_1'),cellstr('hsTNI vs \sigma_2'),cellstr('hsTNI vs Kurtosis_1'),...
     cellstr('hsTNI vs Kurtosis_2'),cellstr('hsTNI vs Skewness_1'),cellstr('hsTNI vs Skewness_2'),cellstr('hsTNI vs Mode_1'),cellstr('hsTNI vs Mode_2'),...
     cellstr('hsTNI vs Median_1'),cellstr('hsTNI vs Median_2'),cellstr('hsTNI vs Interquart_1'),cellstr('hsTNI vs Interquart_2'),cellstr('hsTNI vs corr_{12}')];
+for i = 1:numel(dataplt(1,:))-1
+dataplt(:,i) = (dataplt(:,i) - mean(dataplt(:,i)))./std(dataplt(:,i));
+end
 x=dataplt(:,1:numel(dataplt(1,:))-1);
 y=dataplt(:,end);
 figure
